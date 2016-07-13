@@ -1,0 +1,202 @@
+<!DOCTYPE html> 
+<html><head>
+<meta charset=UTF-8>
+<title>Mobile Orientation Demo</title>
+
+<script src="https://cesiumjs.org/Cesium/Build/Cesium/Cesium.js"></script>
+<style>
+      @import url(https://cesiumjs.org/Cesium/Build/Cesium/Widgets/widgets.css);
+      html, body, #cesiumContainer {
+          width: 90%; height: 90%; margin: 25px; padding: 0;
+      }
+</style>
+
+</head>
+
+<body>
+
+Alpha:       <span id="alpha"> </span> <p/>
+Beta:        <span id="beta">  </span> <p/>
+Gamma:       <span id="gamma"> </span> <p/>
+
+<button id="locate" onclick="locate()" >Locate Me</button>
+<!-- <button id="hover" onclick="hover()" value="false">Hover</button> -->
+<button id="toggleOrientation" onclick="toggleOrientation()" value="true">Toggle</button>
+<button id="reset" onclick="reset()" >Reset Orientation</button>
+
+<div id="cesiumContainer"></div>
+
+<script>
+    "use strict";
+
+    var viewer = new Cesium.Viewer('cesiumContainer');
+
+    // Set a suitable layer for debugging.
+    var layer_picker = viewer.baseLayerPicker;
+    var layers = layer_picker.viewModel.imageryProviderViewModels;
+    var selected_layer = layers[5];
+    layer_picker.viewModel.selectedImagery = selected_layer;
+
+    // Device Orientation
+    var alpha = 0;
+    var beta = 0;
+    var gamma = 0;
+
+    // Origin Offset
+    var last_start_heading = 0;
+    var last_start_alpha = 0;
+
+    // A few debug locations
+    //viewer.camera.position = Cesium.Cartesian3.fromDegrees(144.35690, -38.14688, 20);
+    viewer.camera.position = Cesium.Cartesian3.fromDegrees(149.123, -35.282, 20);
+
+    // 
+    orientationToggled();
+    reset();
+    viewer.clock.onTick.addEventListener(tick);
+    window.addEventListener('deviceorientation', orientationUpdate);
+
+    // TODO Fix when the device changes the rotation orientation automatically.
+
+
+
+
+
+    function locate()
+    {
+        if (navigator.geolocation)
+        {
+            navigator.geolocation.getCurrentPosition(setPosition);
+        }
+    }
+
+    function hover()
+    {
+        // TODO
+    }
+
+    function toggleOrientation()
+    {
+        // Toggle State
+        if (document.getElementById("toggleOrientation").value == "true")
+        {
+            document.getElementById("toggleOrientation").value = "false";
+        }
+        else
+        {
+            document.getElementById("toggleOrientation").value = "true";
+        }
+
+        orientationToggled();
+    }
+
+    function reset()
+    {
+        last_start_alpha = 0;
+        last_start_heading = 0;
+    }
+
+    function orientationToggled()
+    {        
+        // Update State
+        if (document.getElementById("toggleOrientation").value == "true")
+        {
+            last_start_alpha = alpha;
+            last_start_heading = Cesium.Math.toDegrees(viewer.camera.heading);
+        }      
+
+        // Update UI
+        if (document.getElementById("toggleOrientation").value == "false")
+        {
+            document.getElementById("toggleOrientation").innerHTML = "Start Orientation";
+        }
+        else
+        {
+            document.getElementById("toggleOrientation").innerHTML = "Stop Orientation";
+        }
+    }
+
+    function orientationUpdate(event)
+    {
+        alpha = event.alpha;
+        beta = event.beta;
+        gamma = event.gamma;
+
+        document.getElementById("alpha").innerHTML = alpha;
+        document.getElementById("beta").innerHTML  = beta;
+        document.getElementById("gamma").innerHTML = gamma;
+    }
+
+    function setPosition(position)
+    {
+        // TODO check that the position is not zero zero.
+        viewer.camera.position = Cesium.Cartesian3.fromDegrees(position.coords.longitude, position.coords.latitude, 20);
+    }
+
+    function tick(clock)
+    {
+        // If we are updating the camera orientation
+        if (document.getElementById("toggleOrientation").value == "true")
+        {
+            var rotation_vector = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+            var r = Cesium.Matrix3.fromArray(rotation_vector);
+
+            var roll_increment;
+
+            // Pitch - Align the device orientation frame with the ceasium orientation frame.
+            roll_increment = Cesium.Matrix3.fromRotationX(Cesium.Math.toRadians(90));
+            Cesium.Matrix3.multiply(r, roll_increment, r);
+
+            // Roll - Apply the deivce roll.
+            roll_increment = Cesium.Matrix3.fromRotationZ(Cesium.Math.toRadians(gamma));
+            Cesium.Matrix3.multiply(r, roll_increment, r);
+
+            // Pitch - Apply the deivce pitch.
+            roll_increment = Cesium.Matrix3.fromRotationX(Cesium.Math.toRadians(-beta));
+            Cesium.Matrix3.multiply(r, roll_increment, r);
+
+            // Heading - Apply the incremental deivce heading (from when start was last triggered).
+            roll_increment = Cesium.Matrix3.fromRotationY(Cesium.Math.toRadians(-(alpha-last_start_alpha)));
+            Cesium.Matrix3.multiply(r, roll_increment, r);
+
+            // Heading - Use the offset when the orientation was last started.
+            roll_increment = Cesium.Matrix3.fromRotationY(Cesium.Math.toRadians(last_start_heading));
+            Cesium.Matrix3.multiply(r, roll_increment, r);
+
+            // Relable the matrix elements to match with the math formulation.
+            // TODO Insert documentation here on the math.
+            rotation_vector = Cesium.Matrix3.toArray(r);
+            var r11 = rotation_vector[0];
+            var r12 = rotation_vector[3];
+            var r13 = rotation_vector[6];
+            var r21 = rotation_vector[1];
+            var r22 = rotation_vector[4];
+            var r23 = rotation_vector[7];
+            var r31 = rotation_vector[2];
+            var r32 = rotation_vector[5];
+            var r33 = rotation_vector[8];
+
+            var heading = Cesium.Math.toDegrees(Math.atan2(-r31, r33));
+            var roll    = Cesium.Math.toDegrees(Math.atan2(-r12, r22));
+            var pitch   = Cesium.Math.toDegrees(Math.atan2(-r32, Math.sqrt(r31*r31 + r33*r33)));
+
+            // Set the orientation of the camera.
+            viewer.camera.setView(
+            {
+                orientation: 
+                {
+                    roll    : Cesium.Math.toRadians(roll),
+                    pitch   : Cesium.Math.toRadians(pitch),
+                    heading : Cesium.Math.toRadians(heading)
+                }
+            });
+        }
+    }
+
+</script>
+
+<script src="../Build/Cesium/Cesium.js"></script>
+
+</body>
+
+</html>
