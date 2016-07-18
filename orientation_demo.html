@@ -15,7 +15,7 @@
 
 <body>
 
-OPS:       <span id="ops"> </span> (Orientations Per Second) <p/>
+OPS:       <span id="ops"> </span> (Orientations Per Second - Long Term Average) <p/>
 
 Alpha:       <span id="alpha"> </span> <p/>
 Beta:        <span id="beta">  </span> <p/>
@@ -47,6 +47,9 @@ Gamma:       <span id="gamma"> </span> <p/>
     // Origin Offset
     var last_start_heading = 0;
     var last_start_alpha = 0;
+
+    // Flag indicating whether any of the orientation values have been updated.
+    var orientation_updated = true;
 
     // "Framerate" Limiting (Maximum number of orientations per second).
     var last_update = new Date();
@@ -104,6 +107,7 @@ Gamma:       <span id="gamma"> </span> <p/>
     {
         last_start_alpha = 0;
         last_start_heading = 0;
+        orientation_updated = true;
     }
 
     function orientationToggled()
@@ -113,6 +117,7 @@ Gamma:       <span id="gamma"> </span> <p/>
         {
             last_start_alpha = alpha;
             last_start_heading = Cesium.Math.toDegrees(viewer.camera.heading);
+            orientation_updated = true;
         }      
 
         // Update UI
@@ -131,6 +136,7 @@ Gamma:       <span id="gamma"> </span> <p/>
         alpha = event.alpha;
         beta = event.beta;
         gamma = event.gamma;
+        orientation_updated = true;
 
         document.getElementById("alpha").innerHTML = alpha;
         document.getElementById("beta").innerHTML  = beta;
@@ -154,11 +160,12 @@ Gamma:       <span id="gamma"> </span> <p/>
         }
         else // If we are updating the camera orientation
         {
-            // If a sufficent amount of time has elapsed such that we are below the update rate cap.
-            if ((Date.now() - last_update) >= 1000/max_update_rate)
+            // If a sufficent amount of time has elapsed such that we are below the update rate cap. Also check that we are only updating if the values have changed.
+            if (((Date.now() - last_update) >= 1000/max_update_rate) && orientation_updated)
             {
                 // Mark that we are updating now.
                 last_update = Date.now();
+                orientation_updated = false;
 
                 // Collect performance metrics
                 if (reorientations == 0)
