@@ -15,6 +15,8 @@
 
 <body>
 
+OPS:       <span id="ops"> </span> (Orientations Per Second) <p/>
+
 Alpha:       <span id="alpha"> </span> <p/>
 Beta:        <span id="beta">  </span> <p/>
 Gamma:       <span id="gamma"> </span> <p/>
@@ -45,6 +47,14 @@ Gamma:       <span id="gamma"> </span> <p/>
     // Origin Offset
     var last_start_heading = 0;
     var last_start_alpha = 0;
+
+    // "Framerate" Limiting (Maximum number of orientations per second).
+    var last_update = new Date();
+    var max_update_rate = 10;
+
+    // Operation Counter
+    var reorientations = 0;
+    var first_orientation = new Date();
 
     // A few debug locations
     //viewer.camera.position = Cesium.Cartesian3.fromDegrees(144.35690, -38.14688, 20);
@@ -135,61 +145,86 @@ Gamma:       <span id="gamma"> </span> <p/>
 
     function tick(clock)
     {
-        // If we are updating the camera orientation
-        if (document.getElementById("toggleOrientation").value == "true")
+        if (document.getElementById("toggleOrientation").value != "true")
         {
-            var rotation_vector = [1, 0, 0, 0, 1, 0, 0, 0, 1];
-            var r = Cesium.Matrix3.fromArray(rotation_vector);
+            // We are not updating the camera orientation / Reinitalise.
+            reorientations = 0;
 
-            var roll_increment;
-
-            // Pitch - Align the device orientation frame with the ceasium orientation frame.
-            roll_increment = Cesium.Matrix3.fromRotationX(Cesium.Math.toRadians(90));
-            Cesium.Matrix3.multiply(r, roll_increment, r);
-
-            // Roll - Apply the deivce roll.
-            roll_increment = Cesium.Matrix3.fromRotationZ(Cesium.Math.toRadians(gamma));
-            Cesium.Matrix3.multiply(r, roll_increment, r);
-
-            // Pitch - Apply the deivce pitch.
-            roll_increment = Cesium.Matrix3.fromRotationX(Cesium.Math.toRadians(-beta));
-            Cesium.Matrix3.multiply(r, roll_increment, r);
-
-            // Heading - Apply the incremental deivce heading (from when start was last triggered).
-            roll_increment = Cesium.Matrix3.fromRotationY(Cesium.Math.toRadians(-(alpha-last_start_alpha)));
-            Cesium.Matrix3.multiply(r, roll_increment, r);
-
-            // Heading - Use the offset when the orientation was last started.
-            roll_increment = Cesium.Matrix3.fromRotationY(Cesium.Math.toRadians(last_start_heading));
-            Cesium.Matrix3.multiply(r, roll_increment, r);
-
-            // Relable the matrix elements to match with the math formulation.
-            // TODO Insert documentation here on the math.
-            rotation_vector = Cesium.Matrix3.toArray(r);
-            var r11 = rotation_vector[0];
-            var r12 = rotation_vector[3];
-            var r13 = rotation_vector[6];
-            var r21 = rotation_vector[1];
-            var r22 = rotation_vector[4];
-            var r23 = rotation_vector[7];
-            var r31 = rotation_vector[2];
-            var r32 = rotation_vector[5];
-            var r33 = rotation_vector[8];
-
-            var heading = Cesium.Math.toDegrees(Math.atan2(-r31, r33));
-            var roll    = Cesium.Math.toDegrees(Math.atan2(-r12, r22));
-            var pitch   = Cesium.Math.toDegrees(Math.atan2(-r32, Math.sqrt(r31*r31 + r33*r33)));
-
-            // Set the orientation of the camera.
-            viewer.camera.setView(
+            document.getElementById("ops").innerHTML = "Stopped";
+        }
+        else // If we are updating the camera orientation
+        {
+            // If a sufficent amount of time has elapsed such that we are below the update rate cap.
+            if ((Date.now() - last_update) >= 1000/max_update_rate)
             {
-                orientation: 
+                // Mark that we are updating now.
+                last_update = Date.now();
+
+                // Collect performance metrics
+                if (reorientations == 0)
                 {
-                    roll    : Cesium.Math.toRadians(roll),
-                    pitch   : Cesium.Math.toRadians(pitch),
-                    heading : Cesium.Math.toRadians(heading)
+                    first_orientation = new Date();
                 }
-            });
+                reorientations++;
+
+                // Display performace metrics
+                document.getElementById("ops").innerHTML = reorientations/((Date.now()-first_orientation)/1000);
+
+
+                // TODO replace this with a nicer initalisation...this works but is not particularly clean.
+                var rotation_vector = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+                var r = Cesium.Matrix3.fromArray(rotation_vector);
+
+                var roll_increment;
+
+                // Pitch - Align the device orientation frame with the ceasium orientation frame.
+                roll_increment = Cesium.Matrix3.fromRotationX(Cesium.Math.toRadians(90));
+                Cesium.Matrix3.multiply(r, roll_increment, r);
+
+                // Roll - Apply the deivce roll.
+                roll_increment = Cesium.Matrix3.fromRotationZ(Cesium.Math.toRadians(gamma));
+                Cesium.Matrix3.multiply(r, roll_increment, r);
+
+                // Pitch - Apply the deivce pitch.
+                roll_increment = Cesium.Matrix3.fromRotationX(Cesium.Math.toRadians(-beta));
+                Cesium.Matrix3.multiply(r, roll_increment, r);
+
+                // Heading - Apply the incremental deivce heading (from when start was last triggered).
+                roll_increment = Cesium.Matrix3.fromRotationY(Cesium.Math.toRadians(-(alpha-last_start_alpha)));
+                Cesium.Matrix3.multiply(r, roll_increment, r);
+
+                // Heading - Use the offset when the orientation was last started.
+                roll_increment = Cesium.Matrix3.fromRotationY(Cesium.Math.toRadians(last_start_heading));
+                Cesium.Matrix3.multiply(r, roll_increment, r);
+
+                // Relable the matrix elements to match with the math formulation.
+                // TODO Insert documentation here on the math.
+                rotation_vector = Cesium.Matrix3.toArray(r);
+                var r11 = rotation_vector[0];
+                var r12 = rotation_vector[3];
+                var r13 = rotation_vector[6];
+                var r21 = rotation_vector[1];
+                var r22 = rotation_vector[4];
+                var r23 = rotation_vector[7];
+                var r31 = rotation_vector[2];
+                var r32 = rotation_vector[5];
+                var r33 = rotation_vector[8];
+
+                var heading = Cesium.Math.toDegrees(Math.atan2(-r31, r33));
+                var roll    = Cesium.Math.toDegrees(Math.atan2(-r12, r22));
+                var pitch   = Cesium.Math.toDegrees(Math.atan2(-r32, Math.sqrt(r31*r31 + r33*r33)));
+
+                // Set the orientation of the camera.
+                viewer.camera.setView(
+                {
+                    orientation:
+                    {
+                        roll    : Cesium.Math.toRadians(roll),
+                        pitch   : Cesium.Math.toRadians(pitch),
+                        heading : Cesium.Math.toRadians(heading)
+                    }
+                });
+            }
         }
     }
 
