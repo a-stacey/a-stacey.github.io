@@ -22,8 +22,8 @@ Beta:        <span id="beta">  </span> <p/>
 Gamma:       <span id="gamma"> </span> <p/>
 
 <button id="locate" onclick="locate()" >Locate Me</button>
-<!-- <button id="hover" onclick="hover()" value="false">Hover</button> -->
-<button id="toggleOrientation" onclick="toggleOrientation()" value="true">Toggle</button>
+<button id="toggleHover" onclick="toggleHover()" value="false">Hover Toggle</button>
+<button id="toggleOrientation" onclick="toggleOrientation()" value="true">Orientation Toggle</button>
 <button id="reset" onclick="reset()" >Reset Orientation</button>
 
 <div id="cesiumContainer"></div>
@@ -51,6 +51,10 @@ Gamma:       <span id="gamma"> </span> <p/>
     // Flag indicating whether any of the orientation values have been updated.
     var orientation_updated = true;
 
+    // Constants for the ground and hover height.
+    var ground_height = 20;
+    var hover_height = 250;
+
     // "Framerate" Limiting (Maximum number of orientations per second).
     var last_update = new Date();
     var max_update_rate = 10;
@@ -64,6 +68,7 @@ Gamma:       <span id="gamma"> </span> <p/>
     viewer.camera.position = Cesium.Cartesian3.fromDegrees(149.123, -35.282, 20);
 
     // 
+    hoverToggled();
     orientationToggled();
     reset();
     viewer.clock.onTick.addEventListener(tick);
@@ -83,9 +88,19 @@ Gamma:       <span id="gamma"> </span> <p/>
         }
     }
 
-    function hover()
+    function toggleHover()
     {
-        // TODO
+        // Toggle State
+        if (document.getElementById("toggleHover").value == "true")
+        {
+            document.getElementById("toggleHover").value = "false";
+        }
+        else
+        {
+            document.getElementById("toggleHover").value = "true";
+        }
+
+        hoverToggled();
     }
 
     function toggleOrientation()
@@ -108,6 +123,29 @@ Gamma:       <span id="gamma"> </span> <p/>
         last_start_alpha = 0;
         last_start_heading = 0;
         orientation_updated = true;
+    }
+
+    function hoverToggled()
+    {
+        // Update UI
+        if (document.getElementById("toggleHover").value == "false")
+        {
+            document.getElementById("toggleHover").innerHTML = "Hover";
+        }
+        else
+        {
+            document.getElementById("toggleHover").innerHTML = "Ground";
+        }
+
+        var height = ground_height;
+        if (document.getElementById("toggleHover").value == "true")
+        {
+            height = hover_height;
+        }
+
+        // Reset the viewer height.
+        var original_position = viewer.camera.positionCartographic;
+        viewer.camera.position = Cesium.Cartesian3.fromRadians(original_position.longitude, original_position.latitude, height);
     }
 
     function orientationToggled()
@@ -145,8 +183,14 @@ Gamma:       <span id="gamma"> </span> <p/>
 
     function setPosition(position)
     {
+        var height = ground_height;
+        if (document.getElementById("toggleHover").value == "true")
+        {
+            height = hover_height;
+        }
+
         // TODO check that the position is not zero zero.
-        viewer.camera.position = Cesium.Cartesian3.fromDegrees(position.coords.longitude, position.coords.latitude, 20);
+        viewer.camera.position = Cesium.Cartesian3.fromDegrees(position.coords.longitude, position.coords.latitude, height);
     }
 
     function tick(clock)
