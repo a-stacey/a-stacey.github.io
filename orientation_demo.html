@@ -15,11 +15,40 @@
 
 <body>
 
-OPS:       <span id="ops"> </span> (Orientations Per Second - Long Term Average) <p/>
+<!--
+// Ref:
+// https://www.w3.org/TR/orientation-event/
+// https://cesiumjs.org/Cesium/Build/Documentation/Camera.html
+// https://w3c.github.io/deviceorientation/spec-source-orientation.html
+// http://nghiaho.com/?page_id=846
+// http://planning.cs.uiuc.edu/node101.html#fig:yawpitchroll
+// https://cesiumjs.org/Cesium/Build/Documentation/Matrix3.html#.fromQuaternion
 
-Alpha:       <span id="alpha"> </span> <p/>
-Beta:        <span id="beta">  </span> <p/>
-Gamma:       <span id="gamma"> </span> <p/>
+// https://www.reddit.com/r/GoogleCardboard/comments/2l54q6/what_percent_of_cardboard_users_experience_drift/
+// http://electronics.stackexchange.com/questions/110506/dead-reckoning-with-accelerometer-gyro-possible
+-->
+
+<!--
+Issues: 
+- Zooming as the first action if you are pointing down causes ceasium to crash...not sure if this is something that I am doing wrong or a bug in ceasium. Workaround either pan first before zooming or angle the camera up closer to the horizon before panning (seems to be less then about 40 deg that the issue presents).
+- Not sure that running the rotation update in the tick is the most efficient mechanisim for updating the veiwport - its costing cycles even when it chooses not to update. But this is for proof-of-concept not final implementation.
+- Need to fix the orientation when the screen orientation updates.
+- This method probably only works in Chrome is this a problem?
+- How to implement features/options in a useable UI.
+
+
+Further Ideas:
+- Put a shadow (or dot or person) on the map at the ground height of where you are currently hovering so that you can see where you are hovering above.
+
+-->
+
+
+<!-- Debug:  <span id="debug">     </span> <p/> -->
+OPS:    <span id="ops"> </span> (Orientations Per Second - Long Term Average) <p/>
+
+Alpha:  <span id="alpha"> </span> <p/>
+Beta:   <span id="beta">  </span> <p/>
+Gamma:  <span id="gamma"> </span> <p/>
 
 <button id="locate" onclick="locate()" >Locate Me</button>
 <button id="toggleHover" onclick="toggleHover()" value="false">Hover Toggle</button>
