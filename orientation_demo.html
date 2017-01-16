@@ -49,6 +49,10 @@ OPS:    <span id="ops"> </span> (Orientations Per Second - Long Term Average) <p
 Alpha:  <span id="alpha"> </span> <p/>
 Beta:   <span id="beta">  </span> <p/>
 Gamma:  <span id="gamma"> </span> <p/>
+<p/>
+Last Start Alpha:  <span id="last_start_alpha"> </span> <p/>
+Incremental Alpha:  <span id="incremental_alpha"> </span> <p/>
+Last Start Heading:  <span id="last_start_heading"> </span> <p/>
 
 <button id="locate" onclick="locate()" >Locate Me</button>
 <button id="toggleHover" onclick="toggleHover()" value="false">Hover Toggle</button>
@@ -208,6 +212,10 @@ Gamma:  <span id="gamma"> </span> <p/>
         document.getElementById("alpha").innerHTML = alpha;
         document.getElementById("beta").innerHTML  = beta;
         document.getElementById("gamma").innerHTML = gamma;
+
+        document.getElementById("last_start_alpha").innerHTML  = last_start_alpha;
+        document.getElementById("incremental_alpha").innerHTML  = -(alpha-last_start_alpha);
+        document.getElementById("last_start_heading").innerHTML = last_start_heading;
     }
 
     function setPosition(position)
