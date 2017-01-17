@@ -107,16 +107,16 @@ Gamma:  <span id="gamma"> </span> <p/>
     if ('ondeviceorientationabsolute' in window)
     {
         window.addEventListener('deviceorientationabsolute', orientationUpdate);
-        document.getElementById("method").innerHTML  = "Device Orientation Absolute";
+        document.getElementById("method").innerHTML = "Device Orientation Absolute";
     }
     else if ('ondeviceorientation' in window)
     {
         window.addEventListener('deviceorientation', orientationUpdate);
-        document.getElementById("method").innerHTML  = "Device Orientation";
+        document.getElementById("method").innerHTML = "Device Orientation";
     }
     else
     {
-        document.getElementById("method").innerHTML  = "Device Orientation Not Supported";
+        document.getElementById("method").innerHTML = "Device Orientation Not Supported";
     }
 
     // TODO Fix when the device changes the rotation orientation automatically.
