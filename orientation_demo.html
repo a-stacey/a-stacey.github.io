@@ -46,6 +46,8 @@ Further Ideas:
 <!-- Debug:  <span id="debug">     </span> <p/> -->
 OPS:    <span id="ops"> </span> (Orientations Per Second - Long Term Average) <p/>
 
+Method:  <span id="method"> </span> <p/>
+
 Alpha:  <span id="alpha"> </span> <p/>
 Beta:   <span id="beta">  </span> <p/>
 Gamma:  <span id="gamma"> </span> <p/>
@@ -105,7 +107,21 @@ Last Start Heading:  <span id="last_start_heading"> </span> <p/>
     orientationToggled();
     reset();
     viewer.clock.onTick.addEventListener(tick);
-    window.addEventListener('deviceorientation', orientationUpdate);
+
+    if ('ondeviceorientationabsolute' in window)
+    {
+        window.addEventListener('deviceorientationabsolute', orientationUpdate);
+        document.getElementById("method").innerHTML  = "Device Orientation Absolute";
+    }
+    else if ('ondeviceorientation' in window)
+    {
+        window.addEventListener('deviceorientation', orientationUpdate);
+        document.getElementById("method").innerHTML  = "Device Orientation";
+    }
+    else
+    {
+        document.getElementById("method").innerHTML  = "Device Orientation Not Supported";
+    }
 
     // TODO Fix when the device changes the rotation orientation automatically.
 
