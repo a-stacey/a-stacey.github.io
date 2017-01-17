@@ -119,6 +119,17 @@ Gamma:  <span id="gamma"> </span> <p/>
         document.getElementById("method").innerHTML = "Device Orientation Not Supported";
     }
 
+    if ('oncompassneedscalibration' in window)
+    {
+        document.getElementById("method").innerHTML += " (Compass Calibration Alert Supported.)";
+
+        window.addEventListener("compassneedscalibration", function(event)
+        {
+            alert("Device Recalibration Required!");
+            event.preventDefault();
+        }, true);
+    }
+
     // TODO Fix when the device changes the rotation orientation automatically.
 
 
