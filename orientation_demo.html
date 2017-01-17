@@ -129,6 +129,10 @@ Gamma:  <span id="gamma"> </span> <p/>
             event.preventDefault();
         }, true);
     }
+    else
+    {
+        document.getElementById("method").innerHTML += " (Compass Calibration Alert Not Supported.)";
+    }
 
     // TODO Fix when the device changes the rotation orientation automatically.
 
