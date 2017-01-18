@@ -288,6 +288,10 @@ Gamma:  <span id="gamma"> </span> <p/>
 
                 var roll_increment;
 
+                // Roll - Counteract the screen rotation when the screen is rotated and the rotation lock is not on so the browser reorients the screen.
+                roll_increment = Cesium.Matrix3.fromRotationZ(Cesium.Math.toRadians(screen.orientation.angle));
+                Cesium.Matrix3.multiply(r, roll_increment, r);
+
                 // Pitch - Align the device orientation frame with the ceasium orientation frame.
                 roll_increment = Cesium.Matrix3.fromRotationX(Cesium.Math.toRadians(90));
                 Cesium.Matrix3.multiply(r, roll_increment, r);
